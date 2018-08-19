@@ -1,0 +1,4 @@
+package: crawler
+import:
+- package: github.com/PuerkitoBio/goquery
+  version: ~1.4.1

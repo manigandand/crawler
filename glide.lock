@@ -1,0 +1,13 @@
+hash: 62ce4f8045e2be152a87e6a96951280a41ac08a24dec9cfc6ce2349b640ab706
+updated: 2018-08-20T00:06:56.770032912+05:30
+imports:
+- name: github.com/andybalholm/cascadia
+  version: 901648c87902174f774fac311d7f176f8647bdaa
+- name: github.com/PuerkitoBio/goquery
+  version: dc2ec5c7ca4d9aae063b79b9f581dd3ea6afd2b2
+- name: golang.org/x/net
+  version: aaf60122140d3fcf75376d319f0554393160eb50
+  subpackages:
+  - html
+  - html/atom
+testImports: []
