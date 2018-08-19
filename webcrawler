@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# set gopath
+# export GOPATH=`pwd`
+go_install_not_found="Please install go 1.9"
+which go &> /dev/null
+if [ $? -eq 1 ]
+then
+    echo ${go_install_not_found}
+    exit 1
+fi;
+# test, build, run
+make all

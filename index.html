@@ -14,11 +14,39 @@
 			    $("#result-data").html("");
 				// window.location.href = ('http://127.0.0.1:8080/crawler/?=id'+"assasa")
 			    $.post('crawler/',{"website_address":$("#website_address").val()},function(data){
-			    	//alert(data);			    	
+					str = "<h2> Site Map </h2>"
+					for(i in data) {
+						// console.log(data[i].name)
+						// console.log(data[i].url)
+						name = (data[i].name == "") ? data[i].url : data[i].name;
+						// console.log(name)
+						str += '<div class="col-lg-4 col-md-4"><a onclick=redo_spider("'+data[i].url+'")>'+ name +'</a></div>'
+					}
+
 			    	$("#loader").hide();
-			    	$("#result-data").html("<h2>Site Map: </h2>"+data);
+					$("#result-data").html(str);
 			    });
 			}
+
+			function redo_spider(website_address) {
+				$("#result-div").show();
+			    $("#loader").show();
+			    $("#result-data").html("");
+				$.post('crawler/',{"website_address":website_address},function(data){
+					str = "<h2> Site Map </h2>"
+					for(i in data) {
+						// console.log(data[i].name)
+						// console.log(data[i].url)
+						name = (data[i].name == "") ? data[i].url : data[i].name;
+						// console.log(name)
+						str += '<div class="col-lg-4 col-md-4"><a onclick=redo_spider("'+data[i].url+'")>'+ name +'</a></div>'
+					}
+
+			    	$("#loader").hide();
+					$("#result-data").html(str);
+			    });
+			}
+
 		</script>
 		<style type="text/css">
 			.grey-background {
@@ -104,9 +132,11 @@
 			<div class="result" id="result-div" style="display: none;">
 				<div id="loader" align="center" style="padding: 8% 0px;display: none;color: #2f2f2f;">
 					<i class="fa fa-refresh fa-spin fa-5x fa-fw"></i>				
-				</div>				
-				<div class="result-data" id="result-data">
-				
+				</div>
+				<div class="row"></div>				
+					<div class="result-data col-lg-12 col-md-12" id="result-data">
+					
+					</div>				
 				</div>
 			</div>
 		</div>		
