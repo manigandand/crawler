@@ -66,7 +66,7 @@ func spiderman(w http.ResponseWriter, r *http.Request) {
 func traverseAllLinks(urls []*URL) {
 	var wg sync.WaitGroup
 
-	maxNbConcurrentGoroutines := 5
+	maxNbConcurrentGoroutines := 50
 	concurrentGoroutines := make(chan struct{}, maxNbConcurrentGoroutines)
 	for i := 0; i < maxNbConcurrentGoroutines; i++ {
 		concurrentGoroutines <- struct{}{}
@@ -84,6 +84,7 @@ func traverseAllLinks(urls []*URL) {
 	wg.Add(totalURLs)
 	for _, u := range urls {
 		<-concurrentGoroutines
+		// fmt.Println(u.URL)
 		go webCrawler(u, &wg)
 	}
 
@@ -93,10 +94,8 @@ func traverseAllLinks(urls []*URL) {
 }
 
 func webCrawler(u *URL, wg *sync.WaitGroup) {
-	defer func() {
-		wg.Done()
-		// SiteMapLock.Unlock()
-	}()
+	defer wg.Done()
+	// SiteMapLock.Unlock()
 
 	SiteMapLock.Lock()
 	if _, ok := SiteMap[u.URL]; !ok {
@@ -151,7 +150,7 @@ func scraper(websiteAddress, baseURL string) ([]*URL, error) {
 	return urls, nil
 }
 
-func respondSuccess(w http.ResponseWriter, data []*URL) {
+func respondSuccess(w http.ResponseWriter, data interface{}) {
 	gz := gzip.NewWriter(w)
 	defer gz.Close()
 

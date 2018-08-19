@@ -17,6 +17,7 @@ func main() {
 	rtr.HandleFunc("/", HandleIndex)
 	crawler := rtr.PathPrefix("/crawler").Subrouter()
 	crawler.HandleFunc("/", spiderman).Methods(http.MethodPost)
+	crawler.HandleFunc("/status/", crawlerStatus).Methods(http.MethodGet)
 	http.Handle("/", rtr)
 	log.Println("Starting server on port :8080")
 	http.ListenAndServe(":8080", nil)
@@ -47,6 +48,11 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	io.WriteString(w, buf.String())
+	return
+}
+
+func crawlerStatus(w http.ResponseWriter, r *http.Request) {
+	respondSuccess(w, SiteMap)
 	return
 }
 
