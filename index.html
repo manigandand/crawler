@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Degrees Of Separation</title>
+		<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
+		<script type="text/javascript">
+		  	function spiderman(){
+			    $("#result-div").show();
+			    $("#loader").show();
+			    $("#result-data").html("");
+				// window.location.href = ('http://127.0.0.1:8080/crawler/?=id'+"assasa")
+			    $.post('crawler/',{"website_address":$("#website_address").val()},function(data){
+			    	//alert(data);			    	
+			    	$("#loader").hide();
+			    	$("#result-data").html("<h2>Site Map: </h2>"+data);
+			    });
+			}
+		</script>
+		<style type="text/css">
+			.grey-background {
+				background-color: #004153;
+			    color: #ffffff;
+			}
+			h1{
+				text-align: center;
+			}
+			.well {
+				background-color: #0000;
+				color: rgb(255, 255, 255);
+				width: 423px;
+				height: 200px;
+				border: 1px solid #ccc;
+			}
+			.result {
+			    background-color: #ebebe8;
+			    color: #000;
+			    text-align: left !important;
+			    width: 93%;
+			    min-height: 150px;
+			    border-radius: 5px;
+			    padding: 5px 15px;
+			    overflow: auto;
+			}
+			.result-data {
+				font-size: 18px;
+			}
+			form{
+				text-align: left !important;
+			}
+			label {
+			    font-size: 18px;
+			}
+			.txt_box {
+			    border-style: solid;
+			    border-width: 1px;
+				border-color: rgb(204, 204, 204);
+				color: #000;
+			    border-radius: 5px;
+			    background-color: rgb(255, 255, 255);
+			    box-shadow: 0.5px 0.866px 2px 0px rgba(0, 0, 0, 0.063);
+			    width: 350px;
+			    height: 50px;
+			    padding-left: 15px;
+			    margin-bottom: 15px;
+			}
+			.bos_btn:hover, .bos_btn:active {
+			    background-color: #cc0000;
+			    border-color:#cc0000;
+			    color: #FFF;
+			    text-decoration: none;
+			    cursor: pointer;
+			}
+			.bos_btn {
+			    font-size: 14px;
+			    color: rgb(255, 255, 255);
+			    font-weight: bold;
+			    text-align: center;
+			    border-radius: 5px;
+			    background-color: #cc0000;
+			    box-shadow: 0.5px 0.866px 2px 0px rgba(0, 0, 0, 0.063);
+			    width: 175px;
+			    height: 50px;
+			    padding: 14px;
+			    margin-right: 35px;
+			}
+		</style>
+	</head>
+	<body class="grey-background">
+		<h1>Web Crawler</h1>
+		<div align="center">
+			<div class="well">
+				<form>
+				  <label>Enter Website Address</label><br>
+				  <input type="text" id="website_address" name="website_address" value="https://www.redhat.com/" class="txt_box">
+				  
+				  <br><br>
+				  <a onclick="spiderman()" class="bos_btn pull-right">Crawler!</a>
+				</form>	
+			</div>	
+			<div class="result" id="result-div" style="display: none;">
+				<div id="loader" align="center" style="padding: 8% 0px;display: none;color: #2f2f2f;">
+					<i class="fa fa-refresh fa-spin fa-5x fa-fw"></i>				
+				</div>				
+				<div class="result-data" id="result-data">
+				
+				</div>
+			</div>
+		</div>		
+	</body>
+</html>
