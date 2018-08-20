@@ -39,13 +39,10 @@ func spiderman(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the site already scraped
-	SiteMapLock.Lock()
-	if siteMap, ok := SiteMap[fullpath]; ok {
-		SiteMapLock.Unlock()
+	if siteMap, ok := readSiteMap(fullpath); ok {
 		respondSuccess(w, siteMap)
 		return
 	}
-	SiteMapLock.Unlock()
 
 	urls, err := scraper(websiteAddress, baseURL)
 	if err != nil {
@@ -53,10 +50,7 @@ func spiderman(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// save in map
-	SiteMapLock.Lock()
-	SiteMap[fullpath] = urls
-	SiteMapLock.Unlock()
+	writeSiteMap(fullpath, urls)
 	go traverseAllLinks(urls)
 
 	respondSuccess(w, urls)
@@ -95,11 +89,8 @@ func traverseAllLinks(urls []*URL) {
 
 func webCrawler(u *URL, wg *sync.WaitGroup) {
 	defer wg.Done()
-	// SiteMapLock.Unlock()
 
-	SiteMapLock.Lock()
-	if _, ok := SiteMap[u.URL]; !ok {
-		SiteMapLock.Unlock()
+	if _, ok := readSiteMap(u.URL); !ok {
 		baseURL, fullpath, err := getBaseURL(u.URL)
 		if err != nil {
 			return
@@ -109,13 +100,25 @@ func webCrawler(u *URL, wg *sync.WaitGroup) {
 			return
 		}
 
-		// save in map
-		SiteMapLock.Lock()
-		SiteMap[fullpath] = urls
-		SiteMapLock.Unlock()
+		writeSiteMap(fullpath, urls)
 	}
 
 	return
+}
+
+func readSiteMap(fullpath string) ([]*URL, bool) {
+	SiteMapLock.Lock()
+	siteMap, ok := SiteMap[fullpath]
+	SiteMapLock.Unlock()
+
+	return siteMap, ok
+}
+
+func writeSiteMap(fullpath string, urls []*URL) {
+	// save in map
+	SiteMapLock.Lock()
+	SiteMap[fullpath] = urls
+	SiteMapLock.Unlock()
 }
 
 func scraper(websiteAddress, baseURL string) ([]*URL, error) {

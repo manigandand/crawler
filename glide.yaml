@@ -4,3 +4,9 @@ import:
   version: ~1.4.1
 - package: github.com/gorilla/mux
   version: ~1.6.2
+- package: github.com/onsi/ginkgo
+  version: ~1.6.0
+- package: github.com/onsi/gomega
+  version: ~1.4.1
+- package: github.com/hpcloud/tail
+  version: ~1.0.0
