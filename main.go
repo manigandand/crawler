@@ -12,12 +12,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func main() {
-	rtr := mux.NewRouter()
-	rtr.HandleFunc("/", HandleIndex)
+var rtr *mux.Router
+
+func InitAPI() {
+	rtr = mux.NewRouter()
+	rtr.HandleFunc("/", HandleIndex).Methods(http.MethodGet)
 	crawler := rtr.PathPrefix("/crawler").Subrouter()
 	crawler.HandleFunc("/", spiderman).Methods(http.MethodPost)
 	crawler.HandleFunc("/status/", crawlerStatus).Methods(http.MethodGet)
+}
+
+func main() {
+	InitAPI()
+
 	http.Handle("/", rtr)
 	log.Println("Starting server on port :8080")
 	http.ListenAndServe(":8080", nil)

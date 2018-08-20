@@ -16,7 +16,7 @@ SOURCE_PKG_DIR=.
 SOURCEDIR=.
 SOURCES := $(shell find $(SOURCEDIR) -name '*.go')
 
-all: build-server run
+all: test build-server run
 
 build-server:
 	@echo "==> Building server ...";
@@ -26,10 +26,7 @@ build-server:
 
 test:
 	@echo "==> Running tests ...";
-	# @$(GO_TEST_COVER) $(SOURCE_PKG_DIR)/utils
-	# @$(GO_TEST_COVER) $(SOURCE_PKG_DIR)/ishell
-	# @$(GO_TEST_COVER) $(SOURCE_PKG_DIR)/models
-	# @$(GO_TEST_COVER) $(SOURCE_PKG_DIR)/store
+	@$(GO_TEST_COVER) $(SOURCE_PKG_DIR)
 
 run:
 	./$(SERVER_BIN)
