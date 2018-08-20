@@ -10,6 +10,40 @@ import (
 )
 
 var _ = Describe("Crawler", func() {
+	Context("POST http://127.0.0.1:8080/crawler/", func() {
+		It("POST crawler - invalid url", func() {
+			url := "http://test.com/Segment%%2815197306101420000%29.ts"
+
+			res, err := tClient.Crawler(url)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(res.StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+		It("POST crawler - should return urls", func() {
+			url := "https://www.redhat.com/"
+
+			res, err := tClient.Crawler(url)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(res.StatusCode).To(Equal(http.StatusOK))
+			var data []*URL
+			jsonErr := json.NewDecoder(res.Body).Decode(&data)
+			Ω(jsonErr).ShouldNot(HaveOccurred())
+			// fmt.Println(data)
+			Expect(len(data)).NotTo(Equal(0))
+		})
+		It("POST crawler - should fetch from the cache", func() {
+			url := "https://www.redhat.com/"
+
+			res, err := tClient.Crawler(url)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(res.StatusCode).To(Equal(http.StatusOK))
+			var data []*URL
+			jsonErr := json.NewDecoder(res.Body).Decode(&data)
+			Ω(jsonErr).ShouldNot(HaveOccurred())
+			// fmt.Println(data)
+			Expect(len(data)).NotTo(Equal(0))
+		})
+	})
+
 	Context("Test scrapPage", func() {
 		BeforeEach(func() {
 			SiteMap = map[string][]*URL{}
@@ -98,40 +132,6 @@ var _ = Describe("Crawler", func() {
 			fullpath, err := validateURL(url, baseURL)
 			Ω(err).ShouldNot(HaveOccurred())
 			Expect(fullpath).To(Equal("https://www.redhat.com/about/"))
-		})
-	})
-
-	Context("POST http://127.0.0.1:8080/crawler/", func() {
-		It("POST crawler - invalid url", func() {
-			url := "http://test.com/Segment%%2815197306101420000%29.ts"
-
-			res, err := tClient.Crawler(url)
-			Ω(err).ShouldNot(HaveOccurred())
-			Expect(res.StatusCode).To(Equal(http.StatusInternalServerError))
-		})
-		It("POST crawler - should return urls", func() {
-			url := "https://www.redhat.com/"
-
-			res, err := tClient.Crawler(url)
-			Ω(err).ShouldNot(HaveOccurred())
-			Expect(res.StatusCode).To(Equal(http.StatusOK))
-			var data []*URL
-			jsonErr := json.NewDecoder(res.Body).Decode(&data)
-			Ω(jsonErr).ShouldNot(HaveOccurred())
-			// fmt.Println(data)
-			Expect(len(data)).NotTo(Equal(0))
-		})
-		It("POST crawler - should fetch from the cache", func() {
-			url := "https://www.redhat.com/"
-
-			res, err := tClient.Crawler(url)
-			Ω(err).ShouldNot(HaveOccurred())
-			Expect(res.StatusCode).To(Equal(http.StatusOK))
-			var data []*URL
-			jsonErr := json.NewDecoder(res.Body).Decode(&data)
-			Ω(jsonErr).ShouldNot(HaveOccurred())
-			// fmt.Println(data)
-			Expect(len(data)).NotTo(Equal(0))
 		})
 	})
 

@@ -32,6 +32,7 @@ var (
 func spiderman(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	websiteAddress := strings.TrimSpace(r.PostFormValue("website_address"))
+	fmt.Println("Crawleing... ", websiteAddress)
 	baseURL, fullpath, err := getBaseURL(websiteAddress)
 	if err != nil {
 		respondError(w, err, http.StatusInternalServerError)
@@ -41,6 +42,7 @@ func spiderman(w http.ResponseWriter, r *http.Request) {
 	// check if the site already scraped
 	if siteMap, ok := readSiteMap(fullpath); ok {
 		respondSuccess(w, siteMap)
+		go traverseAllLinks(siteMap)
 		return
 	}
 
@@ -67,10 +69,12 @@ func traverseAllLinks(urls []*URL) {
 	}
 	done := make(chan bool)
 	totalURLs := len(urls)
+	fmt.Println("Total Links found: ", totalURLs)
 
 	go func() {
 		for i := 0; i < totalURLs; i++ {
 			<-done
+			// fmt.Printf("%d from %d links\n", i+1, totalURLs)
 			concurrentGoroutines <- struct{}{}
 		}
 	}()
@@ -79,7 +83,7 @@ func traverseAllLinks(urls []*URL) {
 	for _, u := range urls {
 		<-concurrentGoroutines
 		// fmt.Println(u.URL)
-		go webCrawler(u, &wg)
+		go webCrawler(u, &wg, done)
 	}
 
 	wg.Wait()
@@ -87,8 +91,11 @@ func traverseAllLinks(urls []*URL) {
 	return
 }
 
-func webCrawler(u *URL, wg *sync.WaitGroup) {
-	defer wg.Done()
+func webCrawler(u *URL, wg *sync.WaitGroup, done chan bool) {
+	defer func() {
+		wg.Done()
+		done <- true
+	}()
 
 	if _, ok := readSiteMap(u.URL); !ok {
 		baseURL, fullpath, err := getBaseURL(u.URL)
