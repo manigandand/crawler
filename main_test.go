@@ -47,6 +47,13 @@ func Setup() {
 var _ = Describe("API Test", func() {
 	Describe("GET http://127.0.0.1:8080/", func() {
 		Context("GET http://127.0.0.1:8080/", func() {
+			BeforeEach(func() {
+				SiteMap = map[string][]*URL{}
+			})
+			AfterEach(func() {
+				SiteMap = map[string][]*URL{}
+			})
+
 			It("GET crawler index", func() {
 				res, err := tClient.CrawlerHomePage()
 				Ω(err).ShouldNot(HaveOccurred())
@@ -54,11 +61,18 @@ var _ = Describe("API Test", func() {
 			})
 		})
 		Context("GET http://127.0.0.1:8080/crawler/status/", func() {
+			BeforeEach(func() {
+				SiteMap = map[string][]*URL{}
+			})
+			AfterEach(func() {
+				SiteMap = map[string][]*URL{}
+			})
+
 			It("GET crawler status endpoint - expect zero result", func() {
 				res, err := tClient.CrawlerStatus()
 				Ω(err).ShouldNot(HaveOccurred())
 				Expect(res.StatusCode).To(Equal(http.StatusOK))
-				var data []*URL
+				var data map[string][]*URL
 				jsonErr := json.NewDecoder(res.Body).Decode(&data)
 				Ω(jsonErr).ShouldNot(HaveOccurred())
 				Expect(len(data)).To(Equal(0))

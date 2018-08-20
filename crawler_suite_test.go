@@ -3,6 +3,8 @@ package main
 import (
 	"io"
 	"net/http"
+	"net/url"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -30,8 +32,19 @@ func (c *Client) DoAPIGet(url string) (*http.Response, error) {
 	return c.DoAPICall("GET", c.URL+url, nil)
 }
 
-func (c *Client) DoAPIPost(url string, body io.Reader) (*http.Response, error) {
-	return c.DoAPICall("POST", c.URL+url, body)
+func (c *Client) DoAPIPost(endpoint string, website string) (*http.Response, error) {
+	form := url.Values{}
+	form.Add("website_address", website)
+
+	req, _ := http.NewRequest(http.MethodPost, c.URL+endpoint, strings.NewReader(form.Encode()))
+	req.Header.Set(HEADER_CONTENT_TYPE, "application/x-www-form-urlencoded")
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (c *Client) DoAPICall(method, url string, body io.Reader) (*http.Response, error) {

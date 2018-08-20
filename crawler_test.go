@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,10 +12,10 @@ import (
 var _ = Describe("Crawler", func() {
 	Context("Test scrapPage", func() {
 		BeforeEach(func() {
-			SiteMap = nil
+			SiteMap = map[string][]*URL{}
 		})
 		AfterEach(func() {
-			SiteMap = nil
+			SiteMap = map[string][]*URL{}
 		})
 		It("Should Fail - Invalid url to parse", func() {
 			url := "http://test.com/Segment%%2815197306101420000%29.ts"
@@ -28,7 +30,7 @@ var _ = Describe("Crawler", func() {
 			Expect(htmlStr).To(Equal(""))
 		})
 		It("Should Fail - Invalid url to parse", func() {
-			url := "https://www.redhat.com/"
+			url := "https://www.google.com/"
 			htmlStr, err := scrapPage(url)
 			Ω(err).ShouldNot(HaveOccurred())
 			Expect(htmlStr).NotTo(Equal(""))
@@ -37,10 +39,10 @@ var _ = Describe("Crawler", func() {
 
 	Context("Test getBaseURL", func() {
 		BeforeEach(func() {
-			SiteMap = nil
+			SiteMap = map[string][]*URL{}
 		})
 		AfterEach(func() {
-			SiteMap = nil
+			SiteMap = map[string][]*URL{}
 		})
 		It("Should Fail - Invalid url to parse", func() {
 			url := "http://test.com/Segment%%2815197306101420000%29.ts"
@@ -61,10 +63,10 @@ var _ = Describe("Crawler", func() {
 
 	Context("Test validateURL", func() {
 		BeforeEach(func() {
-			SiteMap = nil
+			SiteMap = map[string][]*URL{}
 		})
 		AfterEach(func() {
-			SiteMap = nil
+			SiteMap = map[string][]*URL{}
 		})
 		It("Should Fail - Invalid url to parse", func() {
 			url := "http://test.com/Segment%%2815197306101420000%29.ts"
@@ -99,14 +101,42 @@ var _ = Describe("Crawler", func() {
 		})
 	})
 
-	It("Should return full path", func() {
-		// var w http.ResponseWriter
-		// respondSuccess(w, nil)
-		// url := "https://www.redhat.com/about/?q=123445"
-		// baseURL := "https://www.redhat.com"
-		// fullpath, err := validateURL(url, baseURL)
-		// Ω(err).ShouldNot(HaveOccurred())
-		// Expect(fullpath).To(Equal("https://www.redhat.com/about/"))
+	Context("POST http://127.0.0.1:8080/crawler/", func() {
+		It("POST crawler - invalid url", func() {
+			url := "http://test.com/Segment%%2815197306101420000%29.ts"
+
+			res, err := tClient.Crawler(url)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(res.StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+		It("POST crawler - should return urls", func() {
+			url := "https://www.redhat.com/"
+
+			res, err := tClient.Crawler(url)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(res.StatusCode).To(Equal(http.StatusOK))
+			var data []*URL
+			jsonErr := json.NewDecoder(res.Body).Decode(&data)
+			Ω(jsonErr).ShouldNot(HaveOccurred())
+			// fmt.Println(data)
+			Expect(len(data)).NotTo(Equal(0))
+		})
+		It("POST crawler - should fetch from the cache", func() {
+			url := "https://www.redhat.com/"
+
+			res, err := tClient.Crawler(url)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(res.StatusCode).To(Equal(http.StatusOK))
+			var data []*URL
+			jsonErr := json.NewDecoder(res.Body).Decode(&data)
+			Ω(jsonErr).ShouldNot(HaveOccurred())
+			// fmt.Println(data)
+			Expect(len(data)).NotTo(Equal(0))
+		})
 	})
 
 })
+
+func (c *Client) Crawler(urlStr string) (*http.Response, error) {
+	return c.DoAPIPost("/crawler/", urlStr)
+}
