@@ -18,9 +18,9 @@ import (
 
 // URL holds the basic site links
 type URL struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
-	// IsVisited bool   `json:"is_visited"`
+	Name      string `json:"name"`
+	URL       string `json:"url"`
+	ChildURLs []*URL `json:"child_urls"`
 }
 
 var (
@@ -33,7 +33,7 @@ var (
 func spiderman(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	websiteAddress := strings.TrimSpace(r.PostFormValue("website_address"))
-	fmt.Println("Crawleing... ", websiteAddress)
+	fmt.Println("Crawling... ", websiteAddress)
 	baseURL, fullpath, err := getBaseURL(websiteAddress)
 	if err != nil {
 		respondError(w, err, http.StatusInternalServerError)
@@ -42,8 +42,8 @@ func spiderman(w http.ResponseWriter, r *http.Request) {
 
 	// check if the site already scraped
 	if siteMap, ok := readSiteMap(fullpath); ok {
-		respondSuccess(w, siteMap)
-		go traverseAllLinks(siteMap)
+		response := traverseAllLinks(removeCircularDataStructures(siteMap))
+		respondSuccess(w, map[string]interface{}{"data": removeCircularDataStructures(response)})
 		return
 	}
 
@@ -52,15 +52,15 @@ func spiderman(w http.ResponseWriter, r *http.Request) {
 		respondError(w, err, http.StatusInternalServerError)
 		return
 	}
-
+	urls = removeCircularDataStructures(urls)
 	writeSiteMap(fullpath, urls)
-	go traverseAllLinks(urls)
+	response := removeCircularDataStructures(traverseAllLinks(urls))
 
-	respondSuccess(w, urls)
+	respondSuccess(w, map[string]interface{}{"data": response})
 	return
 }
 
-func traverseAllLinks(urls []*URL) {
+func traverseAllLinks(urls []*URL) (response []*URL) {
 	var wg sync.WaitGroup
 
 	maxNbConcurrentGoroutines := 50
@@ -70,6 +70,7 @@ func traverseAllLinks(urls []*URL) {
 	}
 	done := make(chan bool)
 	totalURLs := len(urls)
+	resultChan := make(chan *URL)
 	fmt.Println("Total Links found: ", totalURLs)
 
 	go func() {
@@ -84,33 +85,49 @@ func traverseAllLinks(urls []*URL) {
 	for _, u := range urls {
 		<-concurrentGoroutines
 		// fmt.Println(u.URL)
-		go webCrawler(u, &wg, done)
+		go webCrawler(u, &wg, done, resultChan)
+	}
+
+	for i := 0; i < totalURLs; i++ {
+		res := <-resultChan
+		// fmt.Printf("got %d response from %d links\n", i+1, totalURLs)
+		if res != nil && res.ChildURLs != nil {
+			response = append(response, res)
+		}
 	}
 
 	wg.Wait()
 	close(done)
+	close(resultChan)
+
 	return
 }
 
-func webCrawler(u *URL, wg *sync.WaitGroup, done chan bool) {
+func webCrawler(u *URL, wg *sync.WaitGroup, done chan bool, resultChan chan *URL) {
 	defer func() {
 		wg.Done()
 		done <- true
+		resultChan <- u
 	}()
 
-	if _, ok := readSiteMap(u.URL); !ok {
-		baseURL, fullpath, err := getBaseURL(u.URL)
-		if err != nil {
-			return
-		}
-		urls, err := scraper(u.URL, baseURL)
-		if err != nil {
-			return
-		}
-
-		writeSiteMap(fullpath, urls)
+	if childURLs, ok := readSiteMap(u.URL); ok {
+		u.ChildURLs = childURLs
+		return
 	}
 
+	baseURL, fullpath, err := getBaseURL(u.URL)
+	if err != nil {
+		return
+	}
+
+	urls, err := scraper(u.URL, baseURL)
+	if err != nil {
+		return
+	}
+
+	// append childURLs
+	u.ChildURLs = urls
+	writeSiteMap(fullpath, urls)
 	return
 }
 
@@ -161,6 +178,19 @@ func scraper(websiteAddress, baseURL string) ([]*URL, error) {
 	return urls, nil
 }
 
+func removeCircularDataStructures(data []*URL) (res []*URL) {
+	dupLinks := map[string]bool{}
+	for _, u := range data {
+		if _, ok := dupLinks[u.URL]; ok {
+			continue
+		}
+		dupLinks[u.URL] = true
+		res = append(res, u)
+	}
+
+	return
+}
+
 func respondSuccess(w http.ResponseWriter, data interface{}) {
 	gz := gzip.NewWriter(w)
 	defer gz.Close()
@@ -186,7 +216,7 @@ func validateURL(urlStr, baseURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if url.Scheme == "" && url.Host == "" {
+	if url.Scheme == "" && url.Host == "" && len(url.Path) > 2 {
 		return fmt.Sprintf("%s%s", baseURL, url.Path), nil
 	}
 

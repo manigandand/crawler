@@ -21,4 +21,4 @@ POST `http://127.0.0.1:8080/crawler/`
 3. To view all the sitemap
 GET `http://127.0.0.1:8080/crawler/status/` 
 
-
+![alt text](sitemap.png "Sitemap Sample Response")
