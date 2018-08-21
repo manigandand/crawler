@@ -24,6 +24,7 @@ type URL struct {
 }
 
 var (
+	// SiteMapLock mutex
 	SiteMapLock sync.RWMutex
 	// SiteMap holds all the links in the given site
 	SiteMap = make(map[string][]*URL)
@@ -114,9 +115,9 @@ func webCrawler(u *URL, wg *sync.WaitGroup, done chan bool) {
 }
 
 func readSiteMap(fullpath string) ([]*URL, bool) {
-	SiteMapLock.Lock()
+	SiteMapLock.RLock()
 	siteMap, ok := SiteMap[fullpath]
-	SiteMapLock.Unlock()
+	SiteMapLock.RUnlock()
 
 	return siteMap, ok
 }
@@ -225,6 +226,8 @@ func scrapPage(urlStr string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	defer response.Body.Close()
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return "", err
