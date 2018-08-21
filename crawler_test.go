@@ -19,28 +19,32 @@ var _ = Describe("Crawler", func() {
 			Expect(res.StatusCode).To(Equal(http.StatusInternalServerError))
 		})
 		It("POST crawler - should return urls", func() {
-			url := "https://www.redhat.com/"
+			url := "https://www.lipsum.com/"
 
 			res, err := tClient.Crawler(url)
 			Ω(err).ShouldNot(HaveOccurred())
 			Expect(res.StatusCode).To(Equal(http.StatusOK))
-			var data []*URL
+			var data struct {
+				Data []*URL `json:"data"`
+			}
 			jsonErr := json.NewDecoder(res.Body).Decode(&data)
 			Ω(jsonErr).ShouldNot(HaveOccurred())
 			// fmt.Println(data)
-			Expect(len(data)).NotTo(Equal(0))
+			Expect(len(data.Data)).NotTo(Equal(0))
 		})
 		It("POST crawler - should fetch from the cache", func() {
-			url := "https://www.redhat.com/"
+			url := "https://www.lipsum.com/"
 
 			res, err := tClient.Crawler(url)
 			Ω(err).ShouldNot(HaveOccurred())
 			Expect(res.StatusCode).To(Equal(http.StatusOK))
-			var data []*URL
+			var data struct {
+				Data []*URL `json:"data"`
+			}
 			jsonErr := json.NewDecoder(res.Body).Decode(&data)
 			Ω(jsonErr).ShouldNot(HaveOccurred())
 			// fmt.Println(data)
-			Expect(len(data)).NotTo(Equal(0))
+			Expect(len(data.Data)).NotTo(Equal(0))
 		})
 	})
 

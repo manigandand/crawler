@@ -43,7 +43,7 @@ func spiderman(w http.ResponseWriter, r *http.Request) {
 	// check if the site already scraped
 	if siteMap, ok := readSiteMap(fullpath); ok {
 		response := traverseAllLinks(removeCircularDataStructures(siteMap))
-		respondSuccess(w, map[string]interface{}{"data": removeCircularDataStructures(response)})
+		respondSuccess(w, map[string][]*URL{"data": removeCircularDataStructures(response)})
 		return
 	}
 
@@ -56,7 +56,7 @@ func spiderman(w http.ResponseWriter, r *http.Request) {
 	writeSiteMap(fullpath, urls)
 	response := removeCircularDataStructures(traverseAllLinks(urls))
 
-	respondSuccess(w, map[string]interface{}{"data": response})
+	respondSuccess(w, map[string][]*URL{"data": response})
 	return
 }
 
